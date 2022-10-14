@@ -5,6 +5,7 @@ import Table from "./common/table";
 import { Tab } from "bootstrap";
 
 class MoviesTable extends Component {
+
   columns = [
     { path: "title", label: "Title" },
     { path: "genre.name", label: "genre" },
