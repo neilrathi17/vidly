@@ -1,52 +1,80 @@
 import React, { Component } from "react";
+import Input from "./common/input";
+import Joi from "joi-browser";
 
 class LoginForm extends Component {
-  
-    state={
-        account:{username:"",password:""}
-    }
+  state = {
+    account: { username: "", password: "" },
+    errors: {},
+  };
+
+  schema = {
+    username: Joi.string().required().label('Username'),
+    password: Joi.string().required().label('Password'),
+  };
+
+  validate = () => {
+    const {error} = Joi.validate(this.state.account, this.schema, {
+      abortEarly: false,
+    });
+
+    if (!error) return null;
+
+    const errors = {};
+    for (let item of error.details) errors[item.path[0]] = item.message;
+    return errors;
+  };
+
+  validateProperty = ({ name, value }) => {
+    const obj={[name]:value};
+    const schema={[name]:this.schema[name]};
+    const {error}= Joi.validate(obj,schema,)
+    return error? error.details[0].message:null;
+
+
+  };
 
   handleSubmit = (e) => {
     e.preventDefault();
-    console.log("lol");
+    const errors = this.validate();
+    console.log(errors);
+    this.setState({ errors: errors || {} });
+ 
   };
 
-  handleChange=({currentTarget:input})=>
-  {
-    const account={...this.state.account};
-    account[input.name]=input.value;
-    this.setState({account})
-  }
+  handleChange = ({ currentTarget: input }) => {
+    const errors = { ...this.state.errors };
+    const errormessage = this.validateProperty(input);
+    if (errormessage) errors[input.name] = errormessage;
+    else delete errors[input.name];
+
+    const account = { ...this.state.account };
+    account[input.name] = input.value;
+    this.setState({ account, errors });
+  };
 
   render() {
+    const { account, errors } = this.state;
     return (
       <div className="container">
         <h1>Login</h1>
         <form onSubmit={this.handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="username">Username</label>
-            <input
+          <Input
             name="username"
             value={this.state.account.username}
+            label="Username"
             onChange={this.handleChange}
-              id="username"
-              type="text"
-              className="form-control"
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              autoFocus
-              value={this.state.account.password}
-              onChange={this.handleChange}
-              name="password"
-              id="password"
-              type="text"
-              className="form-control"
-            />
-          </div>
-          <button className="btn btn-primary">Login</button>
+            error={errors.username}
+          />
+          <Input
+            name="password"
+            value={this.state.account.password}
+            label="Password"
+            onChange={this.handleChange}
+            error={errors.password}
+          />
+
+          <button disabled={this.validate()} className="btn btn-primary">Login</button>
         </form>
       </div>
     );
